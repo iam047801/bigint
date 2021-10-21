@@ -9,8 +9,6 @@ import (
 	"math/big"
 )
 
-// forked from https://github.com/d-fal/bigint
-
 type BigInt big.Int
 
 // FromBigInt is a shortcut for (*BigInt)(x).
@@ -60,11 +58,11 @@ func (x *BigInt) Scan(value interface{}) error {
 	return fmt.Errorf("error converting type %T into BigInt", value)
 }
 
-func (b BigInt) MarshalJSON() ([]byte, error) {
+func (x *BigInt) MarshalJSON() ([]byte, error) {
     return []byte(b.String()), nil
 }
 
-func (b *BigInt) UnmarshalJSON(p []byte) error {
+func (x *BigInt) UnmarshalJSON(p []byte) error {
     if string(p) == "null" {
         return nil
     }
@@ -73,7 +71,7 @@ func (b *BigInt) UnmarshalJSON(p []byte) error {
     if !ok {
         return fmt.Errorf("not a valid big integer: %s", p)
     }
-    b.Int = z
+    *x = (BigInt)(z)
     return nil
 }
 
