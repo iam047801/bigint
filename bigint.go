@@ -47,7 +47,8 @@ func (x *BigInt) Value() (driver.Value, error) {
 func (x *BigInt) Scan(value interface{}) error {
 	switch value.(type) {
 	case nil:
-		return (*big.Int)(x).SetInt64(0)
+		(*big.Int)(x).SetInt64(0)
+		return nil
 	default:
 		var i sql.NullString
 		if err := i.Scan(value); err != nil {
@@ -56,25 +57,25 @@ func (x *BigInt) Scan(value interface{}) error {
 		if _, ok := (*big.Int)(x).SetString(i.String, 10); ok {
 			return nil
 		}
-		return fmt.Errorf("error converting type %T into BigInt", value)	
+		return fmt.Errorf("error converting type %T into BigInt", value)
 	}
 }
 
 func (x *BigInt) MarshalJSON() ([]byte, error) {
-    return []byte(x.String()), nil
+	return []byte(x.String()), nil
 }
 
 func (x *BigInt) UnmarshalJSON(p []byte) error {
-    if string(p) == "null" {
-        return nil
-    }
-    var z big.Int
-    _, ok := z.SetString(string(p), 10)
-    if !ok {
-        return fmt.Errorf("not a valid big integer: %s", p)
-    }
-    *x = (BigInt)(z)
-    return nil
+	if string(p) == "null" {
+		return nil
+	}
+	var z big.Int
+	_, ok := z.SetString(string(p), 10)
+	if !ok {
+		return fmt.Errorf("not a valid big integer: %s", p)
+	}
+	*x = (BigInt)(z)
+	return nil
 }
 
 // Sub sets new BigInt to the difference x-y and returns it.
