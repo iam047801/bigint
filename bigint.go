@@ -45,17 +45,19 @@ func (x *BigInt) Value() (driver.Value, error) {
 
 // Scan maps value to BigInt.
 func (x *BigInt) Scan(value interface{}) error {
-	var i sql.NullString
-
-	if err := i.Scan(value); err != nil {
-		return err
+	switch value.(type) {
+	case nil:
+		return (*big.Int)(x).SetInt64(0)
+	default:
+		var i sql.NullString
+		if err := i.Scan(value); err != nil {
+			return err
+		}
+		if _, ok := (*big.Int)(x).SetString(i.String, 10); ok {
+			return nil
+		}
+		return fmt.Errorf("error converting type %T into BigInt", value)	
 	}
-
-	if _, ok := (*big.Int)(x).SetString(i.String, 10); ok {
-		return nil
-	}
-
-	return fmt.Errorf("error converting type %T into BigInt", value)
 }
 
 func (x *BigInt) MarshalJSON() ([]byte, error) {
