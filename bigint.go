@@ -30,12 +30,21 @@ func FromInt64(x int64) *BigInt {
 func FromString(x string) (*BigInt, error) {
 	a := big.NewInt(0)
 	b, ok := a.SetString(x, 10)
-
 	if !ok {
 		return nil, fmt.Errorf("cannot create BigInt from string")
 	}
-
 	return FromBigInt(b), nil
+}
+
+// RequireFromString returns a new BigInt from a string representation
+// or panics if cant parse string.
+func RequireFromString(x string) *BigInt {
+	a := new(big.Int)
+	b, ok := a.SetString(x, 10)
+	if !ok {
+		panic("cannot create BigInt from string: " + x)
+	}
+	return FromBigInt(b)
 }
 
 // Value returns string representation of BigInt.
@@ -78,25 +87,36 @@ func (x *BigInt) UnmarshalJSON(p []byte) error {
 	return nil
 }
 
+// Abs returns the absolute value..
+func (x *BigInt) Abs() *BigInt {
+	return (*BigInt)(new(big.Int).Abs(x.ToBigInt()))
+}
+
 // Sub sets new BigInt to the difference x-y and returns it.
 func (x *BigInt) Sub(y *BigInt) *BigInt {
-	return (*BigInt)(big.NewInt(0).Sub(x.ToBigInt(), y.ToBigInt()))
+	return (*BigInt)(new(big.Int).Sub(x.ToBigInt(), y.ToBigInt()))
 }
 
 // Add sets new BigInt to the sum x+y and returns it.
 func (x *BigInt) Add(y *BigInt) *BigInt {
-	return (*BigInt)(big.NewInt(0).Add(x.ToBigInt(), y.ToBigInt()))
+	return (*BigInt)(new(big.Int).Add(x.ToBigInt(), y.ToBigInt()))
 }
 
 // Mul sets new BigInt to the product x*y and returns it.
 func (x *BigInt) Mul(y *BigInt) *BigInt {
-	return (*BigInt)(big.NewInt(0).Mul(x.ToBigInt(), y.ToBigInt()))
+	return (*BigInt)(new(big.Int).Mul(x.ToBigInt(), y.ToBigInt()))
 }
 
 // Div sets new BigInt to the quotient x/y for y != 0 and returns it.
 // If y == 0, a division-by-zero run-time panic occurs.
 func (x *BigInt) Div(y *BigInt) *BigInt {
-	return (*BigInt)(big.NewInt(0).Div(x.ToBigInt(), y.ToBigInt()))
+	return (*BigInt)(new(big.Int).Div(x.ToBigInt(), y.ToBigInt()))
+}
+
+// Pow sets new BigInt to the exp x**y mod |m|.
+// If y <= 0 then return 1.
+func (x *BigInt) Pow(y *BigInt) *BigInt {
+	return (*BigInt)(new(big.Int).Exp(x.ToBigInt(), y.ToBigInt(), nil))
 }
 
 // Neg sets new BigInt to -x and returns it.
@@ -106,12 +126,51 @@ func (x *BigInt) Neg() *BigInt {
 
 // Cmp compares x and y and returns:
 //
-//   -1 if x <  y
-//    0 if x == y
-//   +1 if x >  y
-//
+//	-1 if x <  y
+//	 0 if x == y
+//	+1 if x >  y
 func (x *BigInt) Cmp(y *BigInt) int {
 	return x.ToBigInt().Cmp(y.ToBigInt())
+}
+
+// Equal returns whether the numbers represented by x and y are equal.
+func (x *BigInt) Equal(y *BigInt) bool {
+	return x.Cmp(y) == 0
+}
+
+// GreaterThan (GT) returns true when x is greater than y.
+func (x *BigInt) GreaterThan(y *BigInt) bool {
+	return x.Cmp(y) > 0
+}
+
+// GreaterThanOrEqual (GTE) returns true when x is greater than or equal to y.
+func (x *BigInt) GreaterThanOrEqual(y *BigInt) bool {
+	return x.Cmp(y) >= 0
+}
+
+// LessThan (LT) returns true when x is less than y.
+func (x *BigInt) LessThan(y *BigInt) bool {
+	return x.Cmp(y) < 0
+}
+
+// LessThanOrEqual (LTE) returns true when x is less than or equal to y.
+func (x *BigInt) LessThanOrEqual(y *BigInt) bool {
+	return x.Cmp(y) <= 0
+}
+
+// IsPositive returns true if x > 0.
+func (x *BigInt) IsPositive() bool {
+	return x.ToBigInt().Sign() == 1
+}
+
+// IsNegative returns true if x < 0.
+func (x *BigInt) IsNegative() bool {
+	return x.ToBigInt().Sign() == -1
+}
+
+// IsZero returns true if x == 0.
+func (x *BigInt) IsZero() bool {
+	return x.ToBigInt().Sign() == 0
 }
 
 // ToUInt64 returns the uint64 representation of x.
